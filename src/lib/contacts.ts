@@ -17,6 +17,7 @@ export type Contact = {
 };
 
 export async function saveContact(input: ContactInput) {
+  if (!supabase) return { error: 'Supabase is not configured. Check .env.local.' };
   const { fullName, email, phoneNumber, notes } = input;
   const { data, error } = await supabase
     .from('contacts')
@@ -44,13 +45,15 @@ export async function saveContact(input: ContactInput) {
 }
 
 export async function getContacts() {
+  if (!supabase) return { contacts: [], error: 'Supabase is not configured. Check .env.local.' };
   const { data, error } = await supabase
     .from('contacts')
     .select('id, full_name, email, phone_number, notes, created_at')
     .order('created_at', { ascending: false });
 
   if (error) return { contacts: [], error: error.message };
-  const contacts: Contact[] = (data || []).map((row: any) => ({
+  type Row = { id: string; full_name: string; email: string; phone_number: string; notes: string | null; created_at: string };
+  const contacts: Contact[] = ((data as Row[] | null) || []).map((row) => ({
     id: row.id,
     fullName: row.full_name,
     email: row.email,
