@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { saveContact, getContacts } from "../supabase";
 
 interface Contact {
   id: string;
@@ -21,28 +22,26 @@ const Index = () => {
     notes: "",
   });
 
-  const saveContact = (data: typeof formData) => {
-    const newContact: Contact = {
-      id: Date.now().toString(),
-      ...data,
-    };
-    setContacts((prev) => [...prev, newContact]);
-  };
+  useEffect(() => {
+    async function loadData() {
+      const { data } = await getContacts();
+      setContacts(data);
+    }
+    loadData();
+  }, []);
 
-  const getContacts = () => {
-    return contacts;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    saveContact(formData);
+    await saveContact(formData);
+    const { data } = await getContacts();
+    setContacts(data);
+
     setFormData({
       fullName: "",
       email: "",
       phoneNumber: "",
       notes: "",
     });
-    getContacts();
   };
 
   return (
@@ -93,7 +92,6 @@ const Index = () => {
             </form>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Saved Contacts</CardTitle>
